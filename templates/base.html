@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<head>
+
+    <title>Smart Employee Monitoring</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+    <h2>AI Monitor</h2>
+
+    <a href="/">Dashboard</a>
+
+    <a href="/employees">Employees</a>
+
+    <a href="/add_employee">Add Employee</a>
+
+    <a href="/attendance">Attendance</a>
+
+    <a href="/violations">Violations</a>
+
+    <a href="/email_logs">Email Logs</a>
+
+    <a href="/camera">Live Camera</a>
+
+</div>
+
+<div class="content">
+
+{% block content %}
+
+{% endblock %}
+
+</div>
+
+</body>
+
+</html>

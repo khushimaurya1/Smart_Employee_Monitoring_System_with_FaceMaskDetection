@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Live Camera</h1>
+
+<p id="camera-status">Requesting camera access...</p>
+
+<video id="camera-preview" autoplay muted></video>
+
+<div>
+	<button id="stop-camera" type="button">Stop Camera</button>
+</div>
+
+<p><strong>Shortcut:</strong> Press <kbd>Esc</kbd> to stop the webcam.</p>
+
+{% if running %}
+<p>Backend monitoring is running in the local monitoring process.</p>
+{% else %}
+<p>Backend monitoring is currently stopped.</p>
+<form action="/start_monitoring" method="POST">
+	<button type="submit">Start Backend Monitoring</button>
+</form>
+{% endif %}
+
+<script>
+	const video = document.getElementById("camera-preview");
+	const status = document.getElementById("camera-status");
+	const stopButton = document.getElementById("stop-camera");
+	let cameraStream;
+
+	async function startCamera() {
+		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+			status.textContent = "Camera access is not supported by this browser.";
+			return;
+		}
+
+		try {
+			cameraStream = await navigator.mediaDevices.getUserMedia({
+				video: true,
+				audio: false
+			});
+			video.srcObject = cameraStream;
+			status.textContent = "Camera is active.";
+		} catch (error) {
+			status.textContent = "Camera access was denied or the camera is busy.";
+			console.error(error);
+		}
+	}
+
+	function stopCamera() {
+		if (cameraStream) {
+			cameraStream.getTracks().forEach((track) => track.stop());
+			cameraStream = null;
+		}
+		if (video) {
+			video.srcObject = null;
+		}
+		status.textContent = "Camera stopped.";
+	}
+
+	function handleStopKey(event) {
+		if (event.key === "Escape") {
+			stopCamera();
+		}
+	}
+
+	stopButton.addEventListener("click", stopCamera);
+	document.addEventListener("keydown", handleStopKey);
+	window.addEventListener("beforeunload", stopCamera);
+	document.addEventListener("visibilitychange", () => {
+		if (document.hidden) {
+			stopCamera();
+		}
+	});
+	startCamera();
+</script>
+
+{% endblock %}

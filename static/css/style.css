@@ -1,0 +1,60 @@
+body{
+    margin:0;
+    font-family:Arial;
+}
+
+.sidebar{
+
+    width:230px;
+
+    height:100vh;
+
+    background:#1f2937;
+
+    position:fixed;
+
+    color:white;
+
+    padding:20px;
+
+}
+
+.sidebar a{
+
+    display:block;
+
+    color:white;
+
+    text-decoration:none;
+
+    margin:15px 0;
+
+}
+
+.sidebar a:hover{
+
+    color:cyan;
+
+}
+
+.content{
+
+    margin-left:260px;
+
+    padding:30px;
+
+}
+
+#camera-preview{
+    display:block;
+    width:min(800px, 100%);
+    aspect-ratio:16 / 9;
+    background:#111827;
+    object-fit:cover;
+    margin:20px 0;
+}
+
+button{
+    cursor:pointer;
+    padding:10px 16px;
+}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Email Logs</h1>
+
+{% if email_logs %}
+<table border="1" cellpadding="10">
+	<tr>
+		<th>Employee</th>
+		<th>Receiver</th>
+		<th>Sent At</th>
+	</tr>
+	{% for log in email_logs %}
+	<tr>
+		<td>{{ log[0] }}</td>
+		<td>{{ log[1] }}</td>
+		<td>{{ log[2] }}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% else %}
+<p>No email logs yet.</p>
+{% endif %}
+
+{% endblock %}

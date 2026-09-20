@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Employees</h1>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+
+        <th>Employee ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Department</th>
+        <th>Designation</th>
+
+    </tr>
+
+    {% for employee in employees %}
+
+    <tr>
+
+        <td>{{ employee[0] }}</td>
+        <td>{{ employee[1] }}</td>
+        <td>{{ employee[2] }}</td>
+        <td>{{ employee[3] }}</td>
+        <td>{{ employee[4] }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}
