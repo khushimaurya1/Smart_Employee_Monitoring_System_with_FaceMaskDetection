@@ -1,185 +1,128 @@
-# Smart Employee Mask Monitoring System
+# Smart Employee Monitoring System
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+" />
-  <img src="https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?style=for-the-badge" alt="OpenCV" />
-  <img src="https://img.shields.io/badge/Flask-Web%20UI-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask" />
-  <img src="https://img.shields.io/badge/YOLOv8-Detection-FF6B35?style=for-the-badge" alt="YOLOv8" />
-</p>
+Flask dashboard for workplace mask monitoring, employee face recognition, attendance, guest detection, violation tracking, screenshots, and email alerts.
 
-A smart AI-powered monitoring system designed to detect whether employees are wearing face masks, recognize them using facial recognition, track attendance, and send automated warning emails for non-compliance.
+## Features
 
-## ✨ Highlights
+- YOLO mask/no-mask detection
+- Face recognition for registered employees
+- Multiple people per camera frame
+- Unknown people classified as `Guest`
+- Guests never receive attendance or employee warnings
+- Attendance marked once per employee per day
+- No-mask warning tracking and screenshots
+- Employee and HR email notifications
+- Responsive dashboard for desktop, tablet, and mobile
+- Browser camera capture for hosted deployments
+- Employee photo capture during registration, with automatic embeddings
+- Email, attendance, and violation logs
 
-- Real-time mask detection using YOLOv8
-- Employee face recognition from webcam input
-- Attendance logging for detected employees
-- Violation tracking with warning counts
-- Email notifications to employees and HR
-- Web dashboard for monitoring activity and employee records
-- Camera preview page for live monitoring
+## Architecture
 
-## 🧠 What This Project Does
+The application has two deployment modes:
 
-This project monitors employees in a workplace environment using a webcam feed. It combines:
+1. **Full-AI service:** Runs Flask, OpenCV, YOLO, InsightFace, SQLite, email alerts, and `/process_frame`. Use Render or another service with enough memory and disk for the models.
+2. **Vercel dashboard:** Serves the lightweight responsive web interface. It forwards camera frames to the full-AI service through `AI_SERVICE_URL`.
 
-- Mask detection to classify each face as masked or unmasked
-- Face recognition to identify the person
-- Attendance tracking for recognized employees
-- Automated violation logging when a person is detected without a mask
-- Email alerts for warning escalation
+Vercel cannot bundle the computer-vision dependencies and model files because its function limit is 500 MB. The split deployment is required for hosted live recognition.
 
-The system produces a practical workplace safety solution for offices, factories, and smart security environments.
-
-## 🏗️ Project Structure
+## Project Structure
 
 ```text
 Face_Mask_Detection_Project/
-├── app.py                  # Flask frontend entry point
-├── main.py                 # Camera + detection + recognition pipeline
-├── config.py               # Core app configuration
-├── database.py             # SQLite database and monitoring logic
-├── detector.py             # Mask detection model wrapper
-├── recognizer.py           # Face recognition logic
-├── tracker.py              # Warning and tracking logic
-├── mail.py                 # Email sending functions
-├── employee_data.py        # Employee records / HR config
-├── capture_faces.py        # Face capture utility
-├── register_faces.py       # Registration helper
-├── train.py                # Training logic
-├── screenshot.py           # Screenshot saving utility
-├── static/                 # CSS and frontend assets
-├── templates/              # HTML pages
-├── models/                 # Trained model files
-├── embeddings/             # Saved face embeddings
-├── database/               # SQLite database files
-├── screenshots/            # Captured violation screenshots
-├── modules/                # Dataset and project utilities
-├── test_*.py               # Test files for different components
-├── yolov8n.pt              # YOLO model checkpoint
-├── README.md               # Project documentation
-└── .venv/                  # Virtual environment
+├── app.py                  # Flask routes and frame processing
+├── api/index.py            # Vercel Flask entrypoint
+├── wsgi.py                 # WSGI entrypoint for full-AI hosts
+├── detector.py             # YOLO wrapper
+├── recognizer.py           # InsightFace recognition
+├── database.py             # SQLite records and logs
+├── register_faces.py       # Photo-to-embedding registration
+├── requirements.txt        # Lightweight Vercel dependencies
+├── requirements-ai.txt     # Full recognition service dependencies
+├── render.yaml             # Render full-AI service configuration
+├── vercel.json             # Vercel routing configuration
+├── .vercelignore           # Excludes large AI assets from Vercel
+├── templates/              # Dashboard pages
+├── static/                 # Responsive CSS and assets
+├── models/                 # YOLO model files
+├── embeddings/             # Employee face embeddings
+└── modules/dataset/        # Registered employee photos
 ```
 
-## 🚀 Features Overview
-
-### 1. Mask Detection
-The system uses a model to identify whether a detected face is covered by a mask or not.
-
-### 2. Face Recognition
-Recognized faces are matched against stored employee data and mapped to known identities.
-
-### 3. Attendance Tracking
-When the same employee is detected reliably, the system records attendance automatically.
-
-### 4. Violation Monitoring
-Repeated non-mask detections produce warning counts and are stored in the database.
-
-### 5. Email Alerts
-The system can notify employees when violations occur and escalate to HR after repeated warnings.
-
-### 6. Dashboard Interface
-A simple Flask web UI displays:
-- dashboard
-- employee records
-- attendance logs
-- violations
-- email history
-- live camera page
-
-### 7. Guest Recognition and Employee Enrollment
-
-Every detected face is classified as a known employee or `Guest`. Guests are visible in the camera result but never receive attendance, violation warnings, or employee emails. From **Add Employee**, capture several browser camera photos during registration. The photos are stored under the employee dataset and converted into face embeddings automatically, so no separate manual photo-copy or registration command is required.
-
-## 🛠️ Setup
-
-1. Open the project folder.
-2. Activate your virtual environment.
-3. Install dependencies if they are available in your environment.
-
-Example:
+## Local Setup
 
 ```bash
 cd Face_Mask_Detection_Project
-.venv\Scripts\activate
-pip install opencv-python flask ultralytics Pillow
+python -m venv .venv
+# Windows: .venv\\Scripts\\activate
+# Linux/macOS: source .venv/bin/activate
+pip install -r requirements-ai.txt
 ```
 
-If your environment already has the required packages installed, you can skip the install step.
-
-## ▶️ Run the Application
-
-### Frontend UI
+Run the full application:
 
 ```bash
 python app.py
 ```
 
-Then open:
+Open `http://127.0.0.1:5000`.
 
-```text
-http://127.0.0.1:5000
+For the desktop OpenCV camera loop instead of the browser camera:
+
+```bash
+python main.py
 ```
 
-### Deploy as one web application
+## Employee Enrollment
 
-The dashboard, employee records, attendance, violations, email logs, and camera page are served from the same Flask URL. For Render, connect this repository and use the included `render.yaml`; it installs `requirements-ai.txt`, starts `wsgi:app`, and exposes the health check at `/health`. Other full-AI hosts can use the same commands:
+Open **Add Employee**, enter the employee details, allow camera access, capture several clear photos, and submit the form. Photos are saved automatically and converted into embeddings. No manual photo copying or separate registration command is needed.
+
+## Deployment
+
+### Full-AI service
+
+Connect the repository to Render. The included `render.yaml` installs `requirements-ai.txt`, starts `wsgi:app`, binds to `$PORT`, and uses `/health` as its health check.
+
+Equivalent commands:
 
 ```bash
 pip install -r requirements-ai.txt
 gunicorn --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT wsgi:app
 ```
 
-Vercel uses the lightweight `requirements.txt` and `.vercelignore` so the dashboard can deploy within its 500 MB function limit. Vercel cannot bundle this project's full computer-vision stack and model files. Deploy the AI-enabled service with Render or another host that supports larger persistent services, then set Vercel's `AI_SERVICE_URL` to that service URL. Email, violation, screenshot, and attendance logs are written by the full-AI service.
+### Vercel dashboard
 
-Set these environment variables in the hosting provider when email alerts are required:
+Connect the repository to Vercel with the project root as the Root Directory. Vercel uses `requirements.txt`, `vercel.json`, and `.vercelignore`. Set `AI_SERVICE_URL` to the deployed full-AI service URL so `/process_frame` is forwarded there.
+
+## Environment Variables
+
+Set these on the full-AI service:
 
 ```text
 MAIL_USERNAME=your-sending-gmail-address
 MAIL_APP_PASSWORD=your-gmail-app-password
+```
+
+Set this on Vercel:
+
+```text
 AI_SERVICE_URL=https://your-full-ai-service.example.com
 ```
 
-For local testing, copy `.env.example` to `.env` and fill in the values. Use a Gmail App Password, not your normal Gmail password, and rotate any credential that was previously exposed in source code.
+For local email testing, copy `.env.example` to `.env`. Use a Gmail App Password, never your regular Gmail password. Never commit `.env`.
 
-Use a persistent disk or a hosted database for production data. The default SQLite database is suitable for a single-instance demo and is created automatically at startup. The browser camera sends a compressed frame to `/process_frame` approximately every 1.5 seconds. The service runs face recognition and mask detection, marks attendance for known employees, and reports processing time on the camera page. Server-side OpenCV monitoring through `main.py` remains a separate local-camera mode controlled by `ENABLE_LOCAL_MONITORING=true`.
+Use a persistent disk or external database for production. SQLite, embeddings, employee photos, and screenshots are local files; Vercel's filesystem is temporary.
 
-### Camera / Detection System
+## Camera Processing
+
+The browser captures a compressed frame about every 1.5 seconds. The full-AI service recognizes all visible faces, labels unknown people as `Guest`, marks attendance only for registered employees, and returns processing time to the camera page. No-mask warnings are tracked for employees and can create screenshots, violation records, and emails.
+
+## Validation
 
 ```bash
-python main.py
+python -m py_compile app.py database.py mail.py recognizer.py register_faces.py
 ```
 
-This starts the webcam monitoring pipeline and AI detection loop.
-
-## 📌 Notes
-
-- The project uses a local SQLite database for attendance, violations, and email logs.
-- The system relies on trained model files in the `models` directory.
-- Webcam access is required for live detection.
-- If the camera is unavailable, the app may not display the live video feed.
-
-## ⚠️ Typical Use Cases
-
-- Office security monitoring
-- Workplace health compliance checks
-- Smart factory safety audits
-- Attendance + safety enforcement systems
-
-## 🤝 Contribution
-
-You are welcome to improve the project by:
-
-- improving the front-end design
-- enhancing detection accuracy
-- adding better reporting
-- adding login and admin panels
-- improving database reporting
-
-## 📃 License
+## License
 
 This project is intended for educational and practical use. Please check your organization’s policy before deploying it in production environments.
-
----
-
-Made with Python, OpenCV, Flask, and AI-powered detection for smarter workplace safety.
