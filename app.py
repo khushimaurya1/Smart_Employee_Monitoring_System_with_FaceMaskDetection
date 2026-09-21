@@ -18,6 +18,9 @@ BASE_DIR = Path(__file__).resolve().parent
 db = Database()
 monitoring_enabled = os.environ.get("ENABLE_LOCAL_MONITORING", "false").lower() == "true"
 frame_processing_enabled = os.environ.get("ENABLE_FRAME_PROCESSING", "true").lower() == "true"
+ai_service_url = os.environ.get("AI_SERVICE_URL", "").rstrip("/")
+if "your-full-ai-service.example.com" in ai_service_url:
+    ai_service_url = ""
 monitoring_components = None
 monitoring_lock = threading.Lock()
 
@@ -68,6 +71,32 @@ def process_frame():
     uploaded_frame = request.files.get("image")
     if uploaded_frame is None:
         return jsonify(error="No camera frame was uploaded"), 400
+
+    if ai_service_url:
+        try:
+            import requests
+
+            response = requests.post(
+                f"{ai_service_url}/process_frame",
+                files={
+                    "image": (
+                        uploaded_frame.filename or "camera.jpg",
+                        uploaded_frame.stream,
+                        uploaded_frame.mimetype or "image/jpeg",
+                    )
+                },
+                timeout=90,
+            )
+            return response.content, response.status_code, {
+                "Content-Type": response.headers.get("Content-Type", "application/json")
+            }
+        except requests.RequestException as error:
+            return jsonify(error=f"AI service unavailable: {error}"), 503
+
+    if os.environ.get("VERCEL"):
+        return jsonify(
+            error="AI processing is not configured. Set AI_SERVICE_URL to the deployed full-AI service."
+        ), 503
 
     try:
         import cv2

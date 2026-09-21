@@ -130,13 +130,14 @@ pip install -r requirements-ai.txt
 gunicorn --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT wsgi:app
 ```
 
-Vercel uses the lightweight `requirements.txt` and `.vercelignore` so the dashboard can deploy within its 500 MB function limit. Vercel cannot bundle this project's full computer-vision stack and model files; deploy the AI-enabled service with Render or another host that supports larger persistent services.
+Vercel uses the lightweight `requirements.txt` and `.vercelignore` so the dashboard can deploy within its 500 MB function limit. Vercel cannot bundle this project's full computer-vision stack and model files. Deploy the AI-enabled service with Render or another host that supports larger persistent services, then set Vercel's `AI_SERVICE_URL` to that service URL. Email, violation, screenshot, and attendance logs are written by the full-AI service.
 
 Set these environment variables in the hosting provider when email alerts are required:
 
 ```text
 MAIL_USERNAME=your-sending-gmail-address
 MAIL_APP_PASSWORD=your-gmail-app-password
+AI_SERVICE_URL=https://your-full-ai-service.example.com
 ```
 
 For local testing, copy `.env.example` to `.env` and fill in the values. Use a Gmail App Password, not your normal Gmail password, and rotate any credential that was previously exposed in source code.
