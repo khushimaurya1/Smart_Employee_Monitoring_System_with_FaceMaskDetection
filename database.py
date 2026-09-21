@@ -5,9 +5,14 @@ from pathlib import Path
 from employee_data import EMPLOYEES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = (
+    "/tmp/employee.db"
+    if os.environ.get("VERCEL")
+    else os.path.join(BASE_DIR, "database", "employee.db")
+)
 DB_PATH = os.environ.get(
     "DATABASE_PATH",
-    os.path.join(BASE_DIR, "database", "employee.db"),
+    DEFAULT_DB_PATH,
 )
 
 
