@@ -1,3 +1,5 @@
+import os
+
 import cv2
 
 from detector import MaskDetector
@@ -18,7 +20,7 @@ from config import *
 # CAMERA
 # =====================================================
 
-camera_backend = cv2.CAP_DSHOW if CAMERA_ID == 0 else 0
+camera_backend = cv2.CAP_DSHOW if CAMERA_ID == 0 and os.name == "nt" else 0
 camera = cv2.VideoCapture(CAMERA_ID, camera_backend)
 
 if not camera.isOpened():
