@@ -123,12 +123,14 @@ http://127.0.0.1:5000
 
 ### Deploy as one web application
 
-The dashboard, employee records, attendance, violations, email logs, and camera page are served from the same Flask URL. For Render, connect this repository and use the included `render.yaml`; it installs `requirements.txt`, starts `wsgi:app`, and exposes the health check at `/health`. Other hosts can use the same commands:
+The dashboard, employee records, attendance, violations, email logs, and camera page are served from the same Flask URL. For Render, connect this repository and use the included `render.yaml`; it installs `requirements-ai.txt`, starts `wsgi:app`, and exposes the health check at `/health`. Other full-AI hosts can use the same commands:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-ai.txt
 gunicorn --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT wsgi:app
 ```
+
+Vercel uses the lightweight `requirements.txt` and `.vercelignore` so the dashboard can deploy within its 500 MB function limit. Vercel cannot bundle this project's full computer-vision stack and model files; deploy the AI-enabled service with Render or another host that supports larger persistent services.
 
 Set these environment variables in the hosting provider when email alerts are required:
 

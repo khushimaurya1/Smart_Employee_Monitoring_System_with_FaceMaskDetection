@@ -1,0 +1,13 @@
+models/
+modules/dataset/
+embeddings/
+screenshots/
+yolov8n.pt
+capture_faces.py
+main.py
+register_faces.py
+train.py
+test_*.py
+requirements-ai.txt
+.venv/
+__pycache__/
