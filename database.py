@@ -5,9 +5,16 @@ from pathlib import Path
 from employee_data import EMPLOYEES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IS_SERVERLESS = any(
+    (
+        os.environ.get("VERCEL"),
+        os.environ.get("AWS_LAMBDA_FUNCTION_VERSION"),
+        BASE_DIR.startswith(("/var/task", "/var/runtime", "/vercel")),
+    )
+)
 DEFAULT_DB_PATH = (
     "/tmp/employee.db"
-    if os.environ.get("VERCEL")
+    if IS_SERVERLESS
     else os.path.join(BASE_DIR, "database", "employee.db")
 )
 DB_PATH = os.environ.get(
