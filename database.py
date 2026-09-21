@@ -1,15 +1,21 @@
 import os
 import sqlite3
 from datetime import datetime
+from pathlib import Path
 from employee_data import EMPLOYEES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "database", "employee.db")
+DB_PATH = os.environ.get(
+    "DATABASE_PATH",
+    os.path.join(BASE_DIR, "database", "employee.db"),
+)
 
 
 class Database:
 
     def __init__(self):
+
+        Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
         self.connection = sqlite3.connect(
             DB_PATH,
@@ -332,7 +338,7 @@ class Database:
             self.attendance_date = today
 
         if name in self.attendance_marked:
-            return
+            return False
 
         current_time = datetime.now().strftime(
             "%H:%M:%S"
@@ -368,6 +374,8 @@ class Database:
         print(
             f"✅ Attendance Marked : {name}"
         )
+
+        return True
 
 
     # =====================================================

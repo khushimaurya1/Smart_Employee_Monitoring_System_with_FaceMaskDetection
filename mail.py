@@ -1,5 +1,6 @@
 import smtplib
 import os
+from dotenv import load_dotenv
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,14 +9,21 @@ from email import encoders
 
 from employee_data import COMPANY
 
+load_dotenv()
+
 
 # ==========================
 # Gmail Credentials
 # ==========================
 
-EMAIL = "foreignfights247@gmail.com"
+EMAIL = os.environ.get("MAIL_USERNAME", "")
+APP_PASSWORD = os.environ.get("MAIL_APP_PASSWORD", "")
 
-APP_PASSWORD = "jnkq kzzk xysd zedm"
+
+def email_configuration_error():
+    if not EMAIL or not APP_PASSWORD:
+        return "MAIL_USERNAME and MAIL_APP_PASSWORD are not configured"
+    return None
 
 
 # ==========================
@@ -54,7 +62,6 @@ def send_email(receiver_email, employee_name):
         subject,
         body
     )
-
 
 # ==========================
 # Send HR Email
@@ -98,7 +105,6 @@ def send_hr_email(receiver, employee_name, warning_count, screenshot_path):
 
     )
 
-
 # ==========================
 # HTML Email Function
 # ==========================
@@ -116,6 +122,11 @@ def send_html_email(
 ):
 
     try:
+
+        configuration_error = email_configuration_error()
+        if configuration_error:
+            print(f"Email Error: {configuration_error}")
+            return False
 
         message = MIMEMultipart()
 

@@ -177,7 +177,7 @@ while True:
             # EMAIL / ATTENDANCE / VIOLATION LOGIC
             # =================================================
 
-            if person_name != "Unknown":
+            if person_name not in ("Unknown", "Guest"):
 
                 # -----------------------------------------
                 # Attendance

@@ -3,6 +3,7 @@ import cv2
 import pickle
 import numpy as np
 from insightface.app import FaceAnalysis
+from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,7 +23,7 @@ def register_employee(employee_name):
         "modules",
         "dataset",
         "employees",
-        employee_name
+        secure_filename(employee_name)
     )
 
     if not os.path.exists(dataset_path):

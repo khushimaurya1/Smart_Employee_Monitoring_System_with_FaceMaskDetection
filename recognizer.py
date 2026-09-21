@@ -77,15 +77,14 @@ class FaceRecognizer:
                     best_name = name
 
             if best_distance > FACE_DISTANCE_THRESHOLD:
-                best_name = "Unknown"
+                best_name = "Guest"
 
             x1, y1, x2, y2 = map(int, face.bbox)
 
-            if best_name != "Unknown":
-                results.append({
-                    "name": best_name,
-                    "bbox": (x1, y1, x2, y2),
-                    "distance": best_distance
-                })
+            results.append({
+                "name": best_name,
+                "bbox": (x1, y1, x2, y2),
+                "distance": best_distance
+            })
 
         return results

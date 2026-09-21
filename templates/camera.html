@@ -8,6 +8,8 @@
 
 <video id="camera-preview" autoplay muted></video>
 
+<p id="recognition-status">AI processing is waiting for camera access.</p>
+
 <div>
 	<button id="stop-camera" type="button">Stop Camera</button>
 </div>
@@ -16,18 +18,24 @@
 
 {% if running %}
 <p>Backend monitoring is running in the local monitoring process.</p>
-{% else %}
-<p>Backend monitoring is currently stopped.</p>
-<form action="/start_monitoring" method="POST">
+{% elif monitoring_enabled %}
+<p>Backend monitoring is available on this machine.</p>
+<form action="{{ url_for('start_monitoring') }}" method="POST">
 	<button type="submit">Start Backend Monitoring</button>
 </form>
+{% else %}
+<p>Browser camera frames are sent to the deployed AI service for recognition and attendance.</p>
 {% endif %}
 
 <script>
 	const video = document.getElementById("camera-preview");
 	const status = document.getElementById("camera-status");
+	const recognitionStatus = document.getElementById("recognition-status");
 	const stopButton = document.getElementById("stop-camera");
 	let cameraStream;
+	let processingTimer;
+	let processingInProgress = false;
+	const canvas = document.createElement("canvas");
 
 	async function startCamera() {
 		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -42,6 +50,8 @@
 			});
 			video.srcObject = cameraStream;
 			status.textContent = "Camera is active.";
+			processingTimer = window.setInterval(processFrame, 1500);
+			processFrame();
 		} catch (error) {
 			status.textContent = "Camera access was denied or the camera is busy.";
 			console.error(error);
@@ -53,10 +63,56 @@
 			cameraStream.getTracks().forEach((track) => track.stop());
 			cameraStream = null;
 		}
+		if (processingTimer) {
+			window.clearInterval(processingTimer);
+			processingTimer = null;
+		}
 		if (video) {
 			video.srcObject = null;
 		}
 		status.textContent = "Camera stopped.";
+	}
+
+	async function processFrame() {
+		if (!cameraStream || processingInProgress || video.readyState < 2) {
+			return;
+		}
+
+		processingInProgress = true;
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
+		canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+
+		try {
+			const image = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.75));
+			const formData = new FormData();
+			formData.append("image", image, "camera.jpg");
+			const response = await fetch("{{ url_for('process_frame') }}", {
+				method: "POST",
+				body: formData
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				throw new Error(result.error || "AI processing failed");
+			}
+
+			const detections = result.detections.length
+				? result.detections.map((item) => `${item.name}: ${item.status}`).join(" | ")
+				: "No face detected";
+			const attendance = result.attendance_marked.length
+				? ` Attendance marked: ${result.attendance_marked.join(", ")}.`
+				: "";
+			const email = result.email_configuration_error
+				? ` Email disabled: ${result.email_configuration_error}.`
+				: result.email_status === "failed"
+					? " Email delivery failed; check SMTP settings."
+					: result.email_status === "sent" ? " Email sent." : "";
+			recognitionStatus.textContent = `${detections}. ${result.processing_time_ms} ms.${attendance}${email}`;
+		} catch (error) {
+			recognitionStatus.textContent = error.message;
+		} finally {
+			processingInProgress = false;
+		}
 	}
 
 	function handleStopKey(event) {

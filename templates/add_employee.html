@@ -4,7 +4,11 @@
 
 <h1>Add Employee</h1>
 
-<form action="/save_employee" method="POST">
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<form action="{{ url_for('save_employee') }}" method="POST" enctype="multipart/form-data">
 
     <label for="employee_id">Employee ID</label><br>
     <input id="employee_id" type="text" name="employee_id" required><br><br>
@@ -21,10 +25,65 @@
     <label for="designation">Designation</label><br>
     <input id="designation" type="text" name="designation" required><br><br>
 
+    <label>Employee Photos</label><br>
+    <video id="registration-camera" autoplay muted playsinline width="320"></video><br>
+    <button id="capture-photo" type="button">Capture Photo</button>
+    <span id="photo-count">0 photos captured</span>
+    <div id="photo-previews"></div>
+    <input id="photos" type="file" name="photos" accept="image/*" multiple hidden>
+    <br><small>Capture several angles with the employee's face clearly visible.</small><br><br>
+
     <button type="submit">
-        Save Employee
+        Save Employee and Photos
     </button>
 
 </form>
+
+<script>
+    const registrationCamera = document.getElementById("registration-camera");
+    const captureButton = document.getElementById("capture-photo");
+    const photoInput = document.getElementById("photos");
+    const photoCount = document.getElementById("photo-count");
+    const photoPreviews = document.getElementById("photo-previews");
+    const capturedPhotos = [];
+    let registrationStream;
+
+    async function startRegistrationCamera() {
+        try {
+            registrationStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
+            registrationCamera.srcObject = registrationStream;
+        } catch (error) {
+            photoCount.textContent = "Camera permission is required to capture employee photos.";
+        }
+    }
+
+    captureButton.addEventListener("click", () => {
+        if (!registrationCamera.videoWidth) return;
+        const canvas = document.createElement("canvas");
+        canvas.width = registrationCamera.videoWidth;
+        canvas.height = registrationCamera.videoHeight;
+        canvas.getContext("2d").drawImage(registrationCamera, 0, 0);
+        canvas.toBlob((blob) => {
+            capturedPhotos.push(new File([blob], `employee-${capturedPhotos.length + 1}.jpg`, {type: "image/jpeg"}));
+            const preview = document.createElement("img");
+            preview.src = URL.createObjectURL(blob);
+            preview.width = 100;
+            preview.style.margin = "4px";
+            photoPreviews.appendChild(preview);
+            photoCount.textContent = `${capturedPhotos.length} photos captured`;
+        }, "image/jpeg", 0.9);
+    });
+
+    document.querySelector("form").addEventListener("submit", () => {
+        const transfer = new DataTransfer();
+        capturedPhotos.forEach((photo) => transfer.items.add(photo));
+        photoInput.files = transfer.files;
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if (registrationStream) registrationStream.getTracks().forEach((track) => track.stop());
+    });
+    startRegistrationCamera();
+</script>
 
 {% endblock %}

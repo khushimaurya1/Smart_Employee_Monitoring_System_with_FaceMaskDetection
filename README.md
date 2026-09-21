@@ -87,6 +87,10 @@ A simple Flask web UI displays:
 - email history
 - live camera page
 
+### 7. Guest Recognition and Employee Enrollment
+
+Every detected face is classified as a known employee or `Guest`. Guests are visible in the camera result but never receive attendance, violation warnings, or employee emails. From **Add Employee**, capture several browser camera photos during registration. The photos are stored under the employee dataset and converted into face embeddings automatically, so no separate manual photo-copy or registration command is required.
+
 ## 🛠️ Setup
 
 1. Open the project folder.
@@ -116,6 +120,26 @@ Then open:
 ```text
 http://127.0.0.1:5000
 ```
+
+### Deploy as one web application
+
+The dashboard, employee records, attendance, violations, email logs, and camera page are served from the same Flask URL. For Render, connect this repository and use the included `render.yaml`; it installs `requirements.txt`, starts `wsgi:app`, and exposes the health check at `/health`. Other hosts can use the same commands:
+
+```bash
+pip install -r requirements.txt
+gunicorn --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT wsgi:app
+```
+
+Set these environment variables in the hosting provider when email alerts are required:
+
+```text
+MAIL_USERNAME=your-sending-gmail-address
+MAIL_APP_PASSWORD=your-gmail-app-password
+```
+
+For local testing, copy `.env.example` to `.env` and fill in the values. Use a Gmail App Password, not your normal Gmail password, and rotate any credential that was previously exposed in source code.
+
+Use a persistent disk or a hosted database for production data. The default SQLite database is suitable for a single-instance demo and is created automatically at startup. The browser camera sends a compressed frame to `/process_frame` approximately every 1.5 seconds. The service runs face recognition and mask detection, marks attendance for known employees, and reports processing time on the camera page. Server-side OpenCV monitoring through `main.py` remains a separate local-camera mode controlled by `ENABLE_LOCAL_MONITORING=true`.
 
 ### Camera / Detection System
 
